@@ -10,3 +10,5 @@ def _env(name: str, default: str) -> str:
 HOST = _env("SALESPERSON_HOST", "127.0.0.1")
 PORT = int(_env("SALESPERSON_PORT", "8000"))
 AGENT_BASE_URL = _env("SALESPERSON_AGENT_BASE_URL", f"http://{HOST}:{PORT}").rstrip("/")
+DB_PATH = _env("SALESPERSON_DB_PATH", "")
+LLM_PROVIDER = _env("SALESPERSON_LLM_PROVIDER", "stub")

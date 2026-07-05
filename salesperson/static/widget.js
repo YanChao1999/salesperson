@@ -14,24 +14,21 @@
     return;
   }
 
-  function createLauncher() {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Chat with sales";
-    button.setAttribute("aria-label", "Open sales chat");
-    button.style.position = "fixed";
-    button.style.right = "20px";
-    button.style.bottom = "20px";
-    button.style.zIndex = "9999";
-    button.style.padding = "12px 16px";
-    button.style.borderRadius = "999px";
-    button.style.border = "none";
-    button.style.background = "#111827";
-    button.style.color = "#fff";
-    button.style.cursor = "pointer";
-    button.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
-    return button;
-  }
+  var style = document.createElement("style");
+  style.textContent =
+    ".spw-launcher{position:fixed;right:20px;bottom:20px;z-index:9999;padding:12px 16px;border:none;border-radius:999px;background:#111827;color:#fff;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.2)}" +
+    ".spw-panel{position:fixed;right:20px;bottom:84px;z-index:9999;width:min(320px,calc(100vw - 40px));max-height:min(420px,calc(100vh - 120px));border:1px solid rgba(0,0,0,.12);border-radius:16px;background:#fff;color:#111;box-shadow:0 16px 48px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden;font:14px/1.45 system-ui,sans-serif}" +
+    ".spw-panel[hidden]{display:none}" +
+    ".spw-header{display:flex;justify-content:space-between;gap:8px;padding:12px 14px;border-bottom:1px solid rgba(0,0,0,.08);background:#f8fafc;font-weight:600}" +
+    ".spw-header span{font-weight:400;color:#64748b;font-size:12px}" +
+    ".spw-messages{display:grid;gap:10px;flex:1;min-height:0;overflow-y:auto;padding:14px;background:#fff}" +
+    ".spw-bubble{max-width:88%;padding:10px 12px;border-radius:14px;white-space:pre-wrap;word-break:break-word}" +
+    ".spw-user{justify-self:end;background:#2563eb;color:#fff;border-bottom-right-radius:4px}" +
+    ".spw-assistant{justify-self:start;background:#f1f5f9;color:#111;border-bottom-left-radius:4px}" +
+    ".spw-form{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(0,0,0,.08)}" +
+    ".spw-form input{flex:1;min-width:0;padding:10px 12px;border:1px solid rgba(0,0,0,.12);border-radius:10px}" +
+    ".spw-form button{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;font-weight:600;cursor:pointer}";
+  document.head.appendChild(style);
 
   function sendMessage(content) {
     return fetch(apiBase + "/v1/chat/completions", {
@@ -52,25 +49,89 @@
     });
   }
 
-  var launcher = createLauncher();
+  var panelOpen = false;
+  var messages = [
+    {
+      role: "assistant",
+      content: "Hi! How can I help you find the right product or plan?",
+    },
+  ];
+
+  var launcher = document.createElement("button");
+  launcher.type = "button";
+  launcher.className = "spw-launcher";
+  launcher.setAttribute("aria-label", "Open sales chat");
+  launcher.textContent = "Chat with sales";
+
+  var panel = document.createElement("div");
+  panel.className = "spw-panel";
+  panel.hidden = true;
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-labelledby", "spw-title");
+  panel.innerHTML =
+    '<div class="spw-header"><strong id="spw-title">Sales assistant</strong><span>Online</span></div>' +
+    '<div class="spw-messages" role="log" aria-live="polite"></div>' +
+    '<form class="spw-form"><input type="text" placeholder="Ask a question…" autocomplete="off" /><button type="submit">Send</button></form>';
+
+  var messageList = panel.querySelector(".spw-messages");
+  var form = panel.querySelector(".spw-form");
+  var input = form.querySelector("input");
+  var submitButton = form.querySelector("button");
+
+  function renderMessages() {
+    messageList.innerHTML = "";
+    messages.forEach(function (item) {
+      var bubble = document.createElement("div");
+      bubble.className = "spw-bubble spw-" + item.role;
+      bubble.textContent = item.content;
+      messageList.appendChild(bubble);
+    });
+    messageList.scrollTop = messageList.scrollHeight;
+  }
+
+  function setOpen(open) {
+    panelOpen = open;
+    panel.hidden = !open;
+    launcher.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      input.focus();
+    }
+  }
+
   launcher.addEventListener("click", function () {
-    var question = window.prompt("Ask our sales assistant:");
-    if (!question) {
+    setOpen(!panelOpen);
+  });
+
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    var text = input.value.trim();
+    if (!text) {
       return;
     }
-    launcher.disabled = true;
-    sendMessage(question)
+    messages.push({ role: "user", content: text });
+    input.value = "";
+    renderMessages();
+    submitButton.disabled = true;
+    sendMessage(text)
       .then(function (payload) {
-        window.alert(payload.message.content);
+        messages.push({ role: "assistant", content: payload.message.content });
+        renderMessages();
       })
       .catch(function (error) {
         console.error("[salesperson]", error);
-        window.alert("Sorry, the assistant is unavailable right now.");
+        messages.push({
+          role: "assistant",
+          content: "Sorry, the assistant is unavailable right now.",
+        });
+        renderMessages();
       })
       .finally(function () {
-        launcher.disabled = false;
+        submitButton.disabled = false;
+        input.focus();
       });
   });
 
+  renderMessages();
   document.body.appendChild(launcher);
+  document.body.appendChild(panel);
 })();

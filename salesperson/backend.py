@@ -9,7 +9,8 @@ from .errors import PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import DealRecord, SalesBehavior, LLMConfig, UsageRecord, Website, WebsiteUser
 from .providers.stub import StubLLMProvider
-from .storage.memory import MemoryRepository
+from .storage.base import PlatformRepository
+from .storage.factory import create_repository
 
 
 def _slugify(value: str) -> str:
@@ -23,11 +24,11 @@ class SalespersonPlatform:
     def __init__(
         self,
         agent_base_url: str = "https://agent.example.com",
-        repository: MemoryRepository | None = None,
+        repository: PlatformRepository | None = None,
         gateway: ChatGateway | None = None,
     ) -> None:
         self.agent_base_url = agent_base_url.rstrip("/")
-        self._repository = repository or MemoryRepository()
+        self._repository = repository or create_repository()
         self.gateway = gateway or ChatGateway(self._repository, StubLLMProvider())
 
     def create_website(

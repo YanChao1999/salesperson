@@ -12,6 +12,7 @@ services:
       SALESPERSON_HOST: 0.0.0.0
       SALESPERSON_PORT: "8000"
       SALESPERSON_AGENT_BASE_URL: http://localhost:8000
+      SALESPERSON_DB_PATH: /workspaces/salesperson/data/salesperson.db
     command: sleep infinity
 
   platform:
@@ -24,6 +25,7 @@ services:
       SALESPERSON_HOST: 0.0.0.0
       SALESPERSON_PORT: "8000"
       SALESPERSON_AGENT_BASE_URL: ${SALESPERSON_AGENT_BASE_URL:-http://localhost:8000}
+      SALESPERSON_DB_PATH: /app/data/salesperson.db
     profiles:
       - deploy
     restart: unless-stopped
