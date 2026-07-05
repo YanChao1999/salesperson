@@ -3,6 +3,8 @@
 test:
 	python3 -m unittest discover -s tests -v
 
+ci: test
+
 serve:
 	python3 -m salesperson
 

@@ -7,29 +7,70 @@ from typing import Any
 from wsgiref.simple_server import make_server
 
 from .backend import SalespersonPlatform
-from .config import AGENT_BASE_URL, HOST, PORT
+from .config import ADMIN_TOKEN, AGENT_BASE_URL, HOST, LLM_PROVIDER, PORT
 from .errors import AuthError, PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import ChatCompletionRequest
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 
+_CORS_PUBLIC_PATHS = {"/widget.js", "/v1/chat/completions", "/v1/usage"}
 
-def _json_response(start_response: Any, status: str, payload: dict[str, Any]) -> list[bytes]:
+
+def _normalize_path(path: str) -> str:
+    if path != "/" and path.endswith("/"):
+        return path.rstrip("/")
+    return path
+
+
+def _cors_enabled(path: str) -> bool:
+    return path in _CORS_PUBLIC_PATHS
+
+
+def _cors_headers(environ: dict[str, Any]) -> list[tuple[str, str]]:
+    if not environ.get("HTTP_ORIGIN"):
+        return []
+    return [
+        ("Access-Control-Allow-Origin", "*"),
+        ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
+        ("Access-Control-Allow-Headers", "Authorization, Content-Type"),
+    ]
+
+
+def _json_response(
+    start_response: Any,
+    status: str,
+    payload: dict[str, Any],
+    *,
+    environ: dict[str, Any] | None = None,
+    path: str = "",
+) -> list[bytes]:
     data = json.dumps(payload).encode("utf-8")
     headers = [
         ("Content-Type", "application/json"),
         ("Content-Length", str(len(data))),
     ]
+    if environ is not None and _cors_enabled(path):
+        headers.extend(_cors_headers(environ))
     start_response(status, headers)
     return [data]
 
 
-def _text_response(start_response: Any, status: str, body: bytes, content_type: str) -> list[bytes]:
+def _text_response(
+    start_response: Any,
+    status: str,
+    body: bytes,
+    content_type: str,
+    *,
+    environ: dict[str, Any] | None = None,
+    path: str = "",
+) -> list[bytes]:
     headers = [
         ("Content-Type", content_type),
         ("Content-Length", str(len(body))),
     ]
+    if environ is not None and _cors_enabled(path):
+        headers.extend(_cors_headers(environ))
     start_response(status, headers)
     return [body]
 
@@ -51,22 +92,70 @@ def _bearer_token(environ: dict[str, Any]) -> str | None:
     return header[7:].strip() or None
 
 
+def _is_admin_route(method: str, path: str, parts: list[str]) -> bool:
+    if path == "/websites" and method == "POST":
+        return True
+    return bool(parts and parts[0] == "websites" and len(parts) >= 2)
+
+
+def _require_admin(environ: dict[str, Any], start_response: Any) -> list[bytes] | None:
+    if not ADMIN_TOKEN:
+        return None
+    token = _bearer_token(environ)
+    if token == ADMIN_TOKEN:
+        return None
+    return _json_response(
+        start_response,
+        "401 Unauthorized",
+        {"error": "Admin authorization required."},
+    )
+
+
 def create_app(platform: SalespersonPlatform | None = None):
     platform = platform or SalespersonPlatform(agent_base_url=AGENT_BASE_URL)
     gateway: ChatGateway = platform.gateway
 
     def app(environ: dict[str, Any], start_response: Any) -> list[bytes]:
         method = environ.get("REQUEST_METHOD", "GET").upper()
-        path = environ.get("PATH_INFO", "/")
+        path = _normalize_path(environ.get("PATH_INFO", "/"))
         try:
+            if method == "OPTIONS" and _cors_enabled(path):
+                headers = _cors_headers(environ) + [("Content-Length", "0")]
+                start_response("204 No Content", headers)
+                return []
+
             body = _read_json(environ)
+
+            if method == "GET" and path == "/":
+                return _json_response(
+                    start_response,
+                    "200 OK",
+                    {
+                        "service": "salesperson-platform",
+                        "llm_provider": LLM_PROVIDER,
+                        "routes": {
+                            "health": "GET /health",
+                            "widget": "GET /widget.js",
+                            "chat": "POST /v1/chat/completions",
+                            "usage": "GET /v1/usage",
+                            "register": "POST /websites",
+                        },
+                    },
+                )
 
             if method == "GET" and path == "/health":
                 return _json_response(start_response, "200 OK", {"status": "ok"})
 
             if method == "GET" and path == "/widget.js":
                 widget = (_STATIC_DIR / "widget.js").read_bytes()
-                return _text_response(start_response, "200 OK", widget, "application/javascript")
+                return _text_response(
+                    start_response,
+                    "200 OK",
+                    widget,
+                    "application/javascript",
+                    environ=environ,
+                    path=path,
+                )
 
             if method == "POST" and path == "/v1/chat/completions":
                 messages = gateway.parse_messages(body["messages"])
@@ -82,13 +171,24 @@ def create_app(platform: SalespersonPlatform | None = None):
                     start_response,
                     "200 OK",
                     gateway.completion_to_dict(response),
+                    environ=environ,
+                    path=path,
                 )
 
             if method == "GET" and path == "/v1/usage":
                 summary = gateway.usage_summary(api_key=_bearer_token(environ))
-                return _json_response(start_response, "200 OK", summary)
+                return _json_response(
+                    start_response,
+                    "200 OK",
+                    summary,
+                    environ=environ,
+                    path=path,
+                )
 
             if method == "POST" and path == "/websites":
+                denied = _require_admin(environ, start_response)
+                if denied:
+                    return denied
                 website = platform.create_website(
                     name=body["name"],
                     domain=body["domain"],
@@ -99,6 +199,11 @@ def create_app(platform: SalespersonPlatform | None = None):
                 return _json_response(start_response, "201 Created", website)
 
             parts = [part for part in path.split("/") if part]
+            if _is_admin_route(method, path, parts):
+                denied = _require_admin(environ, start_response)
+                if denied:
+                    return denied
+
             if len(parts) == 3 and parts[0] == "websites" and parts[2] == "users" and method == "POST":
                 user = platform.create_user(
                     parts[1],
@@ -144,33 +249,53 @@ def create_app(platform: SalespersonPlatform | None = None):
 
             return _json_response(start_response, "404 Not Found", {"error": "Route not found."})
         except AuthError as exc:
-            return _json_response(start_response, "401 Unauthorized", {"error": str(exc)})
+            return _json_response(
+                start_response,
+                "401 Unauthorized",
+                {"error": str(exc)},
+                environ=environ,
+                path=path,
+            )
         except PlatformNotFoundError:
             return _json_response(
                 start_response,
                 "404 Not Found",
                 {"error": "Requested website or user was not found."},
+                environ=environ,
+                path=path,
             )
         except json.JSONDecodeError:
             return _json_response(
                 start_response,
                 "400 Bad Request",
                 {"error": "Request body must be valid JSON."},
+                environ=environ,
+                path=path,
             )
         except KeyError:
             return _json_response(
                 start_response,
                 "400 Bad Request",
                 {"error": "Request body is missing one or more required fields."},
+                environ=environ,
+                path=path,
             )
         except (TypeError, ValueError) as exc:
             message = str(exc) if str(exc) else "Request body contains invalid values."
-            return _json_response(start_response, "400 Bad Request", {"error": message})
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": message},
+                environ=environ,
+                path=path,
+            )
         except Exception:
             return _json_response(
                 start_response,
                 "500 Internal Server Error",
                 {"error": "Internal server error."},
+                environ=environ,
+                path=path,
             )
 
     return app

@@ -4,6 +4,8 @@ API-forward platform for website owners. Websites embed a widget; chat traffic f
 
 See **[docs/PLATFORM.md](docs/PLATFORM.md)** for architecture, API spec, and roadmap.
 
+See **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** for the dev workflow and next sprint items.
+
 **Customer site (GitHub Pages):** [yanchao1999.github.io/salesperson](https://yanchao1999.github.io/salesperson/) — [services](https://yanchao1999.github.io/salesperson/#services) · [plans](https://yanchao1999.github.io/salesperson/#plans) ([PRICING.md](docs/PRICING.md))
 
 **Dev container:** reopen the repo in the dev container for a ready-to-use Python environment.  

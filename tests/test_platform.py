@@ -14,11 +14,14 @@ def request(
     payload: dict | None = None,
     *,
     api_key: str | None = None,
+    origin: str | None = None,
 ):
     body = json.dumps(payload or {}).encode("utf-8")
-    headers = {}
+    headers: dict[str, str] = {}
     if api_key:
         headers["HTTP_AUTHORIZATION"] = f"Bearer {api_key}"
+    if origin:
+        headers["HTTP_ORIGIN"] = origin
     environ = {
         "REQUEST_METHOD": method,
         "PATH_INFO": path,
@@ -35,8 +38,8 @@ def request(
     response = b"".join(app(environ, start_response))
     status_code = int(str(captured["status"]).split()[0])
     if not response:
-        return status_code, {}
-    return status_code, json.loads(response.decode("utf-8"))
+        return status_code, {}, captured.get("headers", [])
+    return status_code, json.loads(response.decode("utf-8")), captured.get("headers", [])
 
 
 class PlatformGatewayTests(unittest.TestCase):
@@ -44,7 +47,7 @@ class PlatformGatewayTests(unittest.TestCase):
         platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
         app = create_app(platform)
 
-        _, website = request(
+        _, website, _ = request(
             app,
             "POST",
             "/websites",
@@ -56,7 +59,7 @@ class PlatformGatewayTests(unittest.TestCase):
         )
         api_key = website["api_key"]
 
-        status, completion = request(
+        status, completion, _ = request(
             app,
             "POST",
             "/v1/chat/completions",
@@ -67,14 +70,14 @@ class PlatformGatewayTests(unittest.TestCase):
         self.assertEqual(completion["message"]["role"], "assistant")
         self.assertGreater(completion["usage"]["total_tokens"], 0)
 
-        status, usage = request(app, "GET", "/v1/usage", api_key=api_key)
+        status, usage, _ = request(app, "GET", "/v1/usage", api_key=api_key)
         self.assertEqual(status, 200)
         self.assertEqual(usage["usage_events"], 1)
         self.assertGreater(usage["tokens"], 0)
 
     def test_public_chat_rejects_missing_api_key(self):
         app = create_app(SalespersonPlatform())
-        status, error = request(
+        status, error, _ = request(
             app,
             "POST",
             "/v1/chat/completions",
@@ -82,6 +85,69 @@ class PlatformGatewayTests(unittest.TestCase):
         )
         self.assertEqual(status, 401)
         self.assertIn("API key", error["error"])
+
+    def test_wsgi_returns_json_on_unhandled_error(self):
+        platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
+        app = create_app(platform)
+        _, website, _ = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Error Store",
+                "domain": "error.example.com",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+
+        def _boom(**_kwargs):
+            raise RuntimeError("unexpected failure")
+
+        platform.gateway.forward_chat = _boom
+
+        status, error, _ = request(
+            app,
+            "POST",
+            "/v1/chat/completions",
+            {"messages": [{"role": "user", "content": "Hello"}]},
+            api_key=website["api_key"],
+        )
+        self.assertEqual(status, 500)
+        self.assertEqual(error["error"], "Internal server error.")
+
+    def test_root_route_lists_public_endpoints(self):
+        app = create_app(SalespersonPlatform())
+        status, payload, _ = request(app, "GET", "/")
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["service"], "salesperson-platform")
+        self.assertIn("chat", payload["routes"])
+
+    def test_public_chat_preflight_returns_cors_headers(self):
+        app = create_app(SalespersonPlatform())
+        status, _, headers = request(
+            app,
+            "OPTIONS",
+            "/v1/chat/completions",
+            origin="http://127.0.0.1:8080",
+        )
+        self.assertEqual(status, 204)
+        header_map = dict(headers)
+        self.assertEqual(header_map.get("Access-Control-Allow-Origin"), "*")
+        self.assertIn("Authorization", header_map.get("Access-Control-Allow-Headers", ""))
+
+    def test_public_chat_error_responses_include_cors_headers(self):
+        app = create_app(SalespersonPlatform())
+        status, error, headers = request(
+            app,
+            "POST",
+            "/v1/chat/completions",
+            {"messages": [{"role": "user", "content": "Hello"}]},
+            origin="http://127.0.0.1:8080",
+        )
+        self.assertEqual(status, 401)
+        self.assertIn("API key", error["error"])
+        header_map = dict(headers)
+        self.assertEqual(header_map.get("Access-Control-Allow-Origin"), "*")
 
     def test_widget_script_is_served(self):
         app = create_app(SalespersonPlatform())
@@ -99,35 +165,6 @@ class PlatformGatewayTests(unittest.TestCase):
         body = b"".join(app(environ, start_response))
         self.assertEqual(int(str(captured["status"]).split()[0]), 200)
         self.assertIn(b"data-api-key", body)
-
-    def test_wsgi_returns_json_on_unhandled_error(self):
-        platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
-        app = create_app(platform)
-        _, website = request(
-            app,
-            "POST",
-            "/websites",
-            {
-                "name": "Error Store",
-                "domain": "error.example.com",
-                "llm": {"provider": "openai", "model": "gpt-4.1"},
-            },
-        )
-
-        def _boom(**_kwargs):
-            raise RuntimeError("unexpected failure")
-
-        platform.gateway.forward_chat = _boom
-
-        status, error = request(
-            app,
-            "POST",
-            "/v1/chat/completions",
-            {"messages": [{"role": "user", "content": "Hello"}]},
-            api_key=website["api_key"],
-        )
-        self.assertEqual(status, 500)
-        self.assertEqual(error["error"], "Internal server error.")
 
 
 if __name__ == "__main__":
