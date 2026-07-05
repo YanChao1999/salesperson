@@ -21,7 +21,7 @@ Contact us when you need to move beyond the free tier.
 | Default sales assistant behavior | ✓ | ✓ | ✓ | ✓ |
 | Public chat API (`/v1/chat/completions`) | — | ✓ | ✓ | ✓ |
 | Usage summary API (`/v1/usage`) | — | ✓ | ✓ | ✓ |
-| Per-website API keys | — | ✓ | ✓ | ✓ |
+| Per-website API keys (for widget embed) | ✓ | ✓ | ✓ | ✓ |
 | Custom prompts, tone & sales goals | — | — | ✓ | ✓ |
 | Bring your own LLM provider (BYOK) | — | — | ✓ | ✓ |
 | Usage & deal tracking | ✓ | ✓ | ✓ | ✓ |

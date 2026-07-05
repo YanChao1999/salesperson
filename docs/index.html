@@ -9,6 +9,7 @@
     />
     <title>Salesperson Agent Platform — AI sales API for website owners</title>
     <link rel="stylesheet" href="assets/style.css" />
+    <script src="assets/demo.js" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -36,11 +37,10 @@
             <h1>Turn any website into an AI-powered sales channel.</h1>
             <p class="lead">
               Paste one embed snippet. Your visitors chat with a sales assistant.
-              We host the API gateway — validate tenants, apply your sales prompts,
-              forward to LLM providers, and meter usage automatically.
+              Try the live demo on the right — then add the same widget to your site.
             </p>
             <div class="hero-actions">
-              <a class="button button-primary" href="#get-started">Get started</a>
+              <a class="button button-primary" href="#services">See services</a>
               <a class="button button-secondary" href="PLATFORM.md">Read platform docs</a>
             </div>
             <ul class="hero-points">
@@ -50,16 +50,28 @@
             </ul>
           </div>
 
-          <div class="code-card" aria-label="Example embed snippet">
-            <div class="code-card-header">
-              <span>Embed on your site</span>
-              <span>widget.js</span>
+          <div class="demo-wrap" aria-label="Live embed demo">
+            <div class="demo-browser">
+              <div class="demo-browser-bar">
+                <span class="demo-dot"></span>
+                <span class="demo-dot"></span>
+                <span class="demo-dot"></span>
+                <span class="demo-url">your-store.example</span>
+              </div>
+              <div class="demo-site">
+                <p class="demo-site-title">Your website</p>
+                <p class="demo-site-copy">Product pages, checkout, blog — anywhere you want a sales assistant.</p>
+                <div id="salesperson-demo" class="demo-chat-root"></div>
+              </div>
             </div>
-            <pre><code>&lt;script
+            <details class="embed-snippet">
+              <summary>Show embed snippet</summary>
+              <pre><code>&lt;script
   src="https://your-platform.example/widget.js"
   data-api-key="sk_live_..."
   data-api-base="https://your-platform.example"
 &gt;&lt;/script&gt;</code></pre>
+            </details>
           </div>
         </div>
       </section>
@@ -114,8 +126,8 @@
                   <td class="yes">✓</td>
                 </tr>
                 <tr>
-                  <th scope="row">Per-website API keys</th>
-                  <td class="no">—</td>
+                  <th scope="row">Per-website API keys (for widget embed)</th>
+                  <td class="yes">✓</td>
                   <td class="yes">✓</td>
                   <td class="yes">✓</td>
                   <td class="yes">✓</td>
