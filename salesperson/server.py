@@ -261,27 +261,41 @@ def create_app(platform: SalespersonPlatform | None = None):
                 start_response,
                 "404 Not Found",
                 {"error": "Requested website or user was not found."},
+                environ=environ,
+                path=path,
             )
         except json.JSONDecodeError:
             return _json_response(
                 start_response,
                 "400 Bad Request",
                 {"error": "Request body must be valid JSON."},
+                environ=environ,
+                path=path,
             )
         except KeyError:
             return _json_response(
                 start_response,
                 "400 Bad Request",
                 {"error": "Request body is missing one or more required fields."},
+                environ=environ,
+                path=path,
             )
         except (TypeError, ValueError) as exc:
             message = str(exc) if str(exc) else "Request body contains invalid values."
-            return _json_response(start_response, "400 Bad Request", {"error": message})
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": message},
+                environ=environ,
+                path=path,
+            )
         except Exception:
             return _json_response(
                 start_response,
                 "500 Internal Server Error",
                 {"error": "Internal server error."},
+                environ=environ,
+                path=path,
             )
 
     return app

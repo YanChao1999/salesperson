@@ -47,11 +47,12 @@ class SqliteRepository:
                     FOREIGN KEY (website_id) REFERENCES websites(website_id)
                 );
                 CREATE TABLE IF NOT EXISTS users (
-                    user_id TEXT PRIMARY KEY,
                     website_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
                     external_user_id TEXT,
                     metadata_json TEXT NOT NULL,
                     created_at TEXT NOT NULL,
+                    PRIMARY KEY (website_id, user_id),
                     FOREIGN KEY (website_id) REFERENCES websites(website_id)
                 );
                 CREATE TABLE IF NOT EXISTS usage_records (

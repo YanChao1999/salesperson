@@ -14,6 +14,12 @@ from salesperson.models import (
 from salesperson.providers.base import LLMProvider
 from salesperson.storage.base import PlatformRepository
 
+_WIDGET_VISITOR_PREFIX = "visitor-"
+
+
+def _is_widget_visitor(user_id: str, channel: str) -> bool:
+    return channel == "website-widget" and user_id.startswith(_WIDGET_VISITOR_PREFIX)
+
 
 class ChatGateway:
     """Public API forward layer: auth → behavior → LLM → auto-meter."""
@@ -58,7 +64,13 @@ class ChatGateway:
         website = self._repository.get_website(website_id)
         user_id = request.user_id or f"{website_id}-anonymous"
         if request.user_id:
-            self._ensure_user(website_id, request.user_id)
+            if _is_widget_visitor(request.user_id, request.channel):
+                self._ensure_user(website_id, request.user_id)
+            else:
+                try:
+                    self._repository.get_user(website_id, request.user_id)
+                except PlatformNotFoundError as exc:
+                    raise AuthError("Unknown user for this website.") from exc
 
         assistant_message, usage = self._provider.complete(
             llm=website.llm,

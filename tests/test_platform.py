@@ -135,6 +135,20 @@ class PlatformGatewayTests(unittest.TestCase):
         self.assertEqual(header_map.get("Access-Control-Allow-Origin"), "*")
         self.assertIn("Authorization", header_map.get("Access-Control-Allow-Headers", ""))
 
+    def test_public_chat_error_responses_include_cors_headers(self):
+        app = create_app(SalespersonPlatform())
+        status, error, headers = request(
+            app,
+            "POST",
+            "/v1/chat/completions",
+            {"messages": [{"role": "user", "content": "Hello"}]},
+            origin="http://127.0.0.1:8080",
+        )
+        self.assertEqual(status, 401)
+        self.assertIn("API key", error["error"])
+        header_map = dict(headers)
+        self.assertEqual(header_map.get("Access-Control-Allow-Origin"), "*")
+
     def test_widget_script_is_served(self):
         app = create_app(SalespersonPlatform())
         environ = {

@@ -100,6 +100,33 @@ class WidgetUserTrackingTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(usage["tracked_users"], 1)
 
+    def test_chat_rejects_unknown_non_widget_user_ids(self):
+        platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
+        app = create_app(platform)
+        _, website, _ = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Guard Store",
+                "domain": "guard.example.com",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+
+        status, error, _ = request(
+            app,
+            "POST",
+            "/v1/chat/completions",
+            {
+                "messages": [{"role": "user", "content": "Hello"}],
+                "user_id": "random-inflated-id",
+            },
+            api_key=website["api_key"],
+        )
+        self.assertEqual(status, 401)
+        self.assertIn("Unknown user", error["error"])
+
 
 if __name__ == "__main__":
     unittest.main()
