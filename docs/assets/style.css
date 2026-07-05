@@ -171,7 +171,7 @@ a:hover {
 
 .demo-site {
   position: relative;
-  min-height: 320px;
+  min-height: 360px;
   padding: 24px;
   background:
     linear-gradient(180deg, rgba(91, 140, 255, 0.06), transparent 40%),
@@ -223,6 +223,7 @@ a:hover {
   right: 18px;
   bottom: 72px;
   width: min(300px, calc(100% - 36px));
+  max-height: calc(100% - 90px);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
@@ -230,6 +231,7 @@ a:hover {
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
+  z-index: 2;
 }
 
 .demo-chat-panel[hidden] {
@@ -244,6 +246,13 @@ a:hover {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
   font-size: 14px;
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+}
+
+.demo-chat-header strong {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .demo-chat-header span {
@@ -254,7 +263,8 @@ a:hover {
 .demo-chat-messages {
   display: grid;
   gap: 10px;
-  max-height: 220px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 14px;
 }
@@ -286,6 +296,7 @@ a:hover {
   gap: 8px;
   padding: 12px;
   border-top: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .demo-chat-form input {

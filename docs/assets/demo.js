@@ -47,9 +47,11 @@
     var panel = document.createElement("div");
     panel.className = "demo-chat-panel";
     panel.hidden = true;
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-labelledby", "demo-chat-title");
     panel.innerHTML =
       '<div class="demo-chat-header">' +
-      '<strong>Sales assistant</strong>' +
+      '<strong id="demo-chat-title">Sales assistant</strong>' +
       '<span>Demo</span>' +
       "</div>" +
       '<div class="demo-chat-messages" role="log" aria-live="polite"></div>' +
