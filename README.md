@@ -4,11 +4,7 @@ API-forward platform for website owners. Websites embed a widget; chat traffic f
 
 See **[docs/PLATFORM.md](docs/PLATFORM.md)** for architecture, API spec, and roadmap.
 
-**Customer site (GitHub Pages):** after enabling Pages in repo settings, the landing page lives at  
-`https://yanchao1999.github.io/salesperson/` — see [docs/index.html](docs/index.html).
-
-> **Deploy failing?** See [docs/GITHUB_PAGES_SETUP.md](docs/GITHUB_PAGES_SETUP.md)  
-> Pages deploys on merge to **`main`** only (not on PR branches).
+**Customer site (GitHub Pages):** [yanchao1999.github.io/salesperson](https://yanchao1999.github.io/salesperson/) — [services](https://yanchao1999.github.io/salesperson/#services) · [plans](https://yanchao1999.github.io/salesperson/#plans) ([PRICING.md](docs/PRICING.md))
 
 **Dev container:** reopen the repo in the dev container for a ready-to-use Python environment.  
 See **[docs/DEVCONTAINER.md](docs/DEVCONTAINER.md)** for develop & deploy commands.
