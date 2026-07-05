@@ -14,22 +14,63 @@ from .models import ChatCompletionRequest
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 
+_CORS_PUBLIC_PATHS = {"/widget.js", "/v1/chat/completions", "/v1/usage"}
 
-def _json_response(start_response: Any, status: str, payload: dict[str, Any]) -> list[bytes]:
+
+def _normalize_path(path: str) -> str:
+    if path != "/" and path.endswith("/"):
+        return path.rstrip("/")
+    return path
+
+
+def _cors_enabled(path: str) -> bool:
+    return path in _CORS_PUBLIC_PATHS
+
+
+def _cors_headers(environ: dict[str, Any]) -> list[tuple[str, str]]:
+    if not environ.get("HTTP_ORIGIN"):
+        return []
+    return [
+        ("Access-Control-Allow-Origin", "*"),
+        ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
+        ("Access-Control-Allow-Headers", "Authorization, Content-Type"),
+    ]
+
+
+def _json_response(
+    start_response: Any,
+    status: str,
+    payload: dict[str, Any],
+    *,
+    environ: dict[str, Any] | None = None,
+    path: str = "",
+) -> list[bytes]:
     data = json.dumps(payload).encode("utf-8")
     headers = [
         ("Content-Type", "application/json"),
         ("Content-Length", str(len(data))),
     ]
+    if environ is not None and _cors_enabled(path):
+        headers.extend(_cors_headers(environ))
     start_response(status, headers)
     return [data]
 
 
-def _text_response(start_response: Any, status: str, body: bytes, content_type: str) -> list[bytes]:
+def _text_response(
+    start_response: Any,
+    status: str,
+    body: bytes,
+    content_type: str,
+    *,
+    environ: dict[str, Any] | None = None,
+    path: str = "",
+) -> list[bytes]:
     headers = [
         ("Content-Type", content_type),
         ("Content-Length", str(len(body))),
     ]
+    if environ is not None and _cors_enabled(path):
+        headers.extend(_cors_headers(environ))
     start_response(status, headers)
     return [body]
 
@@ -57,16 +98,44 @@ def create_app(platform: SalespersonPlatform | None = None):
 
     def app(environ: dict[str, Any], start_response: Any) -> list[bytes]:
         method = environ.get("REQUEST_METHOD", "GET").upper()
-        path = environ.get("PATH_INFO", "/")
+        path = _normalize_path(environ.get("PATH_INFO", "/"))
         try:
+            if method == "OPTIONS" and _cors_enabled(path):
+                headers = _cors_headers(environ) + [("Content-Length", "0")]
+                start_response("204 No Content", headers)
+                return []
+
             body = _read_json(environ)
+
+            if method == "GET" and path == "/":
+                return _json_response(
+                    start_response,
+                    "200 OK",
+                    {
+                        "service": "salesperson-platform",
+                        "routes": {
+                            "health": "GET /health",
+                            "widget": "GET /widget.js",
+                            "chat": "POST /v1/chat/completions",
+                            "usage": "GET /v1/usage",
+                            "register": "POST /websites",
+                        },
+                    },
+                )
 
             if method == "GET" and path == "/health":
                 return _json_response(start_response, "200 OK", {"status": "ok"})
 
             if method == "GET" and path == "/widget.js":
                 widget = (_STATIC_DIR / "widget.js").read_bytes()
-                return _text_response(start_response, "200 OK", widget, "application/javascript")
+                return _text_response(
+                    start_response,
+                    "200 OK",
+                    widget,
+                    "application/javascript",
+                    environ=environ,
+                    path=path,
+                )
 
             if method == "POST" and path == "/v1/chat/completions":
                 messages = gateway.parse_messages(body["messages"])
@@ -82,11 +151,19 @@ def create_app(platform: SalespersonPlatform | None = None):
                     start_response,
                     "200 OK",
                     gateway.completion_to_dict(response),
+                    environ=environ,
+                    path=path,
                 )
 
             if method == "GET" and path == "/v1/usage":
                 summary = gateway.usage_summary(api_key=_bearer_token(environ))
-                return _json_response(start_response, "200 OK", summary)
+                return _json_response(
+                    start_response,
+                    "200 OK",
+                    summary,
+                    environ=environ,
+                    path=path,
+                )
 
             if method == "POST" and path == "/websites":
                 website = platform.create_website(
@@ -144,7 +221,13 @@ def create_app(platform: SalespersonPlatform | None = None):
 
             return _json_response(start_response, "404 Not Found", {"error": "Route not found."})
         except AuthError as exc:
-            return _json_response(start_response, "401 Unauthorized", {"error": str(exc)})
+            return _json_response(
+                start_response,
+                "401 Unauthorized",
+                {"error": str(exc)},
+                environ=environ,
+                path=path,
+            )
         except PlatformNotFoundError:
             return _json_response(
                 start_response,
