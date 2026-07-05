@@ -7,6 +7,9 @@ See **[docs/PLATFORM.md](docs/PLATFORM.md)** for architecture, API spec, and roa
 **Customer site (GitHub Pages):** after enabling Pages in repo settings, the landing page lives at  
 `https://yanchao1999.github.io/salesperson/` — see [docs/index.html](docs/index.html).
 
+> **Deploy failing?** Enable Pages first: [docs/GITHUB_PAGES_SETUP.md](docs/GITHUB_PAGES_SETUP.md)  
+> Settings → Pages → Source → **GitHub Actions**
+
 **Dev container:** reopen the repo in the dev container for a ready-to-use Python environment.  
 See **[docs/DEVCONTAINER.md](docs/DEVCONTAINER.md)** for develop & deploy commands.
 
