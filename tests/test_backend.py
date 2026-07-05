@@ -67,7 +67,8 @@ class SalespersonPlatformTests(unittest.TestCase):
         self.assertEqual(summary["deals"], 1)
         self.assertEqual(summary["deal_value"], 149.99)
         self.assertEqual(summary["latest_behavior"]["tone"], "friendly")
-        self.assertIn(website["website_id"], website["plugin"]["embed_code"])
+        self.assertIn("data-api-key", website["plugin"]["embed_code"])
+        self.assertTrue(website["api_key"].startswith("sk_live_"))
 
     def test_wsgi_backend_supports_full_agent_setup_flow(self):
         app = create_app(SalespersonPlatform(agent_base_url="https://sales.example.com"))
@@ -186,7 +187,7 @@ class SalespersonPlatformTests(unittest.TestCase):
         )
 
         self.assertEqual(status, 400)
-        self.assertEqual(error["error"], "Request body contains invalid values.")
+        self.assertIn("non-negative", error["error"])
 
 
 if __name__ == "__main__":
