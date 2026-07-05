@@ -1,0 +1,29 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - .:/workspaces/salesperson
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    environment:
+      SALESPERSON_HOST: 0.0.0.0
+      SALESPERSON_PORT: "8000"
+      SALESPERSON_AGENT_BASE_URL: http://localhost:8000
+    command: sleep infinity
+
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      SALESPERSON_HOST: 0.0.0.0
+      SALESPERSON_PORT: "8000"
+      SALESPERSON_AGENT_BASE_URL: ${SALESPERSON_AGENT_BASE_URL:-http://localhost:8000}
+    profiles:
+      - deploy
+    restart: unless-stopped
