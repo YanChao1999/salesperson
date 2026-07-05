@@ -1,39 +1,40 @@
-# GitHub Pages setup (one-time)
+# GitHub Pages setup
 
-The deploy workflow fails with **"Get Pages site failed"** until GitHub Pages is enabled on the repository.
+Pages uses **GitHub Actions** as the build source (`build_type: workflow`).
 
-## Option A — GitHub UI (recommended)
+Production deploys run **only from `main`** — PR and feature branches do not deploy.
 
-1. Open [Repository Settings → Pages](https://github.com/YanChao1999/salesperson/settings/pages)
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**
-3. Re-run the **Deploy GitHub Pages** workflow (Actions tab → failed run → **Re-run all jobs**)
+## One-time enablement
 
-## Option B — GitHub CLI
+If deploy fails with **"Get Pages site failed"**, enable Pages first:
 
-Requires repo admin permissions:
+1. [Settings → Pages](https://github.com/YanChao1999/salesperson/settings/pages)
+2. **Build and deployment** → **Source** → **GitHub Actions**
+
+Or:
 
 ```bash
 gh api --method POST repos/YanChao1999/salesperson/pages -f build_type=workflow
 ```
 
-If Pages was previously configured with another source:
+The `github-pages` environment should allow **`main`** only (default). No feature-branch deploy is needed.
+
+## Release flow
+
+1. Open a PR into `main` (tests run; no Pages deploy)
+2. Merge to `main`
+3. **Deploy GitHub Pages** workflow runs automatically
+4. Site updates at **https://yanchao1999.github.io/salesperson/**
+
+Manual deploy from `main`:
 
 ```bash
-gh api --method PUT repos/YanChao1999/salesperson/pages -f build_type=workflow
+gh workflow run pages.yml --ref main
 ```
-
-Then re-run the workflow.
-
-## After enablement
-
-Site URL: **https://yanchao1999.github.io/salesperson/**
-
-The workflow (`.github/workflows/pages.yml`) publishes the `docs/` folder on push to `main` or `copilot/salesperson-agent-platform`.
 
 ## Verify
 
 ```bash
 gh api repos/YanChao1999/salesperson/pages
-gh workflow run pages.yml --ref copilot/salesperson-agent-platform
-gh run list --workflow=pages.yml --limit 1
+gh run list --workflow=pages.yml --limit 3
 ```
