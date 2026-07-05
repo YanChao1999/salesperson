@@ -94,10 +94,30 @@ def create_app(platform: SalespersonPlatform | None = None):
                 return _json_response(start_response, "200 OK", summary)
 
             return _json_response(start_response, "404 Not Found", {"error": "Route not found."})
-        except PlatformNotFoundError as exc:
-            return _json_response(start_response, "404 Not Found", {"error": str(exc)})
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-            return _json_response(start_response, "400 Bad Request", {"error": str(exc)})
+        except PlatformNotFoundError:
+            return _json_response(
+                start_response,
+                "404 Not Found",
+                {"error": "Requested website or user was not found."},
+            )
+        except json.JSONDecodeError:
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "Request body must be valid JSON."},
+            )
+        except KeyError:
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "Request body is missing one or more required fields."},
+            )
+        except (TypeError, ValueError):
+            return _json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "Request body contains invalid values."},
+            )
 
     return app
 

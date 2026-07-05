@@ -162,7 +162,7 @@ class SalespersonPlatformTests(unittest.TestCase):
         )
 
         self.assertEqual(status, 404)
-        self.assertIn("Unknown user", error["error"])
+        self.assertEqual(error["error"], "Requested website or user was not found.")
 
     def test_wsgi_backend_rejects_invalid_usage_values(self):
         app = create_app(SalespersonPlatform())
@@ -186,7 +186,7 @@ class SalespersonPlatformTests(unittest.TestCase):
         )
 
         self.assertEqual(status, 400)
-        self.assertIn("non-negative", error["error"])
+        self.assertEqual(error["error"], "Request body contains invalid values.")
 
 
 if __name__ == "__main__":
