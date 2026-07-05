@@ -4,7 +4,7 @@ from salesperson.models import ChatMessage, LLMConfig, SalesBehavior, TokenUsage
 
 
 class StubLLMProvider:
-    """Local dev provider — echoes the last user message with sales tone."""
+    """Demo LLM for local dev — no external API keys required."""
 
     def complete(
         self,

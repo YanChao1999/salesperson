@@ -7,3 +7,4 @@ venv/
 .env
 data/
 *.db
+docs/test-widget.config.js

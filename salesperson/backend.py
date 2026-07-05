@@ -8,7 +8,7 @@ from .auth.keys import generate_api_key, hash_api_key
 from .errors import PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import DealRecord, SalesBehavior, LLMConfig, UsageRecord, Website, WebsiteUser
-from .providers.stub import StubLLMProvider
+from .providers.factory import create_provider
 from .storage.base import PlatformRepository
 from .storage.factory import create_repository
 
@@ -29,7 +29,7 @@ class SalespersonPlatform:
     ) -> None:
         self.agent_base_url = agent_base_url.rstrip("/")
         self._repository = repository or create_repository()
-        self.gateway = gateway or ChatGateway(self._repository, StubLLMProvider())
+        self.gateway = gateway or ChatGateway(self._repository, create_provider())
 
     def create_website(
         self,

@@ -7,7 +7,7 @@ from typing import Any
 from wsgiref.simple_server import make_server
 
 from .backend import SalespersonPlatform
-from .config import AGENT_BASE_URL, HOST, PORT
+from .config import ADMIN_TOKEN, AGENT_BASE_URL, HOST, LLM_PROVIDER, PORT
 from .errors import AuthError, PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import ChatCompletionRequest
@@ -92,6 +92,25 @@ def _bearer_token(environ: dict[str, Any]) -> str | None:
     return header[7:].strip() or None
 
 
+def _is_admin_route(method: str, path: str, parts: list[str]) -> bool:
+    if path == "/websites" and method == "POST":
+        return True
+    return bool(parts and parts[0] == "websites" and len(parts) >= 2)
+
+
+def _require_admin(environ: dict[str, Any], start_response: Any) -> list[bytes] | None:
+    if not ADMIN_TOKEN:
+        return None
+    token = _bearer_token(environ)
+    if token == ADMIN_TOKEN:
+        return None
+    return _json_response(
+        start_response,
+        "401 Unauthorized",
+        {"error": "Admin authorization required."},
+    )
+
+
 def create_app(platform: SalespersonPlatform | None = None):
     platform = platform or SalespersonPlatform(agent_base_url=AGENT_BASE_URL)
     gateway: ChatGateway = platform.gateway
@@ -113,6 +132,7 @@ def create_app(platform: SalespersonPlatform | None = None):
                     "200 OK",
                     {
                         "service": "salesperson-platform",
+                        "llm_provider": LLM_PROVIDER,
                         "routes": {
                             "health": "GET /health",
                             "widget": "GET /widget.js",
@@ -166,6 +186,9 @@ def create_app(platform: SalespersonPlatform | None = None):
                 )
 
             if method == "POST" and path == "/websites":
+                denied = _require_admin(environ, start_response)
+                if denied:
+                    return denied
                 website = platform.create_website(
                     name=body["name"],
                     domain=body["domain"],
@@ -176,6 +199,11 @@ def create_app(platform: SalespersonPlatform | None = None):
                 return _json_response(start_response, "201 Created", website)
 
             parts = [part for part in path.split("/") if part]
+            if _is_admin_route(method, path, parts):
+                denied = _require_admin(environ, start_response)
+                if denied:
+                    return denied
+
             if len(parts) == 3 and parts[0] == "websites" and parts[2] == "users" and method == "POST":
                 user = platform.create_user(
                     parts[1],

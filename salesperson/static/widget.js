@@ -30,6 +30,23 @@
     ".spw-form button{padding:10px 14px;border:none;border-radius:10px;background:#111827;color:#fff;font-weight:600;cursor:pointer}";
   document.head.appendChild(style);
 
+  function getVisitorId() {
+    var storageKey = "salesperson_visitor_id";
+    try {
+      var existing = localStorage.getItem(storageKey);
+      if (existing) {
+        return existing;
+      }
+      var id = "visitor-" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(storageKey, id);
+      return id;
+    } catch (error) {
+      return "visitor-anonymous";
+    }
+  }
+
+  var visitorId = getVisitorId();
+
   function sendMessage(content) {
     return fetch(apiBase + "/v1/chat/completions", {
       method: "POST",
@@ -40,6 +57,7 @@
       body: JSON.stringify({
         messages: [{ role: "user", content: content }],
         channel: "website-widget",
+        user_id: visitorId,
       }),
     }).then(function (response) {
       if (!response.ok) {

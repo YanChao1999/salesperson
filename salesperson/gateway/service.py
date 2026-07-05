@@ -9,6 +9,7 @@ from salesperson.models import (
     ChatCompletionResponse,
     ChatMessage,
     UsageRecord,
+    WebsiteUser,
 )
 from salesperson.providers.base import LLMProvider
 from salesperson.storage.base import PlatformRepository
@@ -34,6 +35,19 @@ class ChatGateway:
             raise AuthError("Invalid API key.")
         return website_id
 
+    def _ensure_user(self, website_id: str, user_id: str) -> None:
+        try:
+            self._repository.get_user(website_id, user_id)
+        except PlatformNotFoundError:
+            self._repository.save_user(
+                WebsiteUser(
+                    user_id=user_id,
+                    website_id=website_id,
+                    external_user_id=user_id,
+                    metadata={"source": "widget"},
+                )
+            )
+
     def forward_chat(
         self,
         *,
@@ -43,12 +57,8 @@ class ChatGateway:
         website_id = self.authenticate(api_key)
         website = self._repository.get_website(website_id)
         user_id = request.user_id or f"{website_id}-anonymous"
-
         if request.user_id:
-            try:
-                self._repository.get_user(website_id, request.user_id)
-            except PlatformNotFoundError as exc:
-                raise AuthError("Unknown user for this website.") from exc
+            self._ensure_user(website_id, request.user_id)
 
         assistant_message, usage = self._provider.complete(
             llm=website.llm,
@@ -69,7 +79,7 @@ class ChatGateway:
 
         self._sequence += 1
         return ChatCompletionResponse(
-            id=f"chatcmpl-stub-{self._sequence}",
+            id=f"chatcmpl-demo-{self._sequence}",
             message=assistant_message,
             usage=usage,
             website_id=website_id,
