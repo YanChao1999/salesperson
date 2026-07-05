@@ -4,7 +4,7 @@ API-forward platform for website owners. Websites embed a widget; all chat traff
 
 **Customer-facing overview:** [GitHub Pages site](index.html) (`docs/index.html`) — what we provide for website owners.
 
-**Pricing:** [PRICING.md](PRICING.md) — four product levels (Free → Advanced).
+**Plans:** [PRICING.md](PRICING.md) — four levels (Free → Advanced).
 
 ## Business model
 

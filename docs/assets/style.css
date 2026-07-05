@@ -319,14 +319,6 @@ a:hover {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
-  display: flex;
-  flex-direction: column;
-}
-
-.price-card-featured {
-  border-color: rgba(91, 140, 255, 0.45);
-  background: linear-gradient(180deg, rgba(91, 140, 255, 0.1), var(--bg-card));
-  box-shadow: var(--shadow);
 }
 
 .price-tier {
@@ -344,35 +336,10 @@ a:hover {
   font-size: 1.15rem;
 }
 
-.price-amount {
-  margin: 0 0 8px;
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
 .price-tagline {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
-  min-height: 2.8em;
-}
-
-.price-features {
-  margin: 0 0 20px;
-  padding-left: 18px;
-  color: var(--muted);
-  font-size: 0.92rem;
-  flex: 1;
-}
-
-.price-features li + li {
-  margin-top: 8px;
-}
-
-.price-cta {
-  width: 100%;
-  margin-top: auto;
 }
 
 .site-footer {
