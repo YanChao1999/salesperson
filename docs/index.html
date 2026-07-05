@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Salesperson Agent Platform — embed an AI sales assistant on any website. One script tag, API-forward gateway, usage metering, and deal tracking."
+    />
+    <title>Salesperson Agent Platform — AI sales API for website owners</title>
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <span>Salesperson</span>
+        </div>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#features">Features</a>
+          <a href="#how-it-works">How it works</a>
+          <a href="#api">API</a>
+          <a href="https://github.com/YanChao1999/salesperson/blob/copilot/salesperson-agent-platform/docs/PLATFORM.md">Docs</a>
+          <a class="button button-primary" href="https://github.com/YanChao1999/salesperson">View on GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="eyebrow">API-forward platform for website owners</span>
+            <h1>Turn any website into an AI-powered sales channel.</h1>
+            <p class="lead">
+              Paste one embed snippet. Your visitors chat with a sales assistant.
+              We host the API gateway — validate tenants, apply your sales prompts,
+              forward to LLM providers, and meter usage automatically.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#get-started">Get started</a>
+              <a class="button button-secondary" href="https://github.com/YanChao1999/salesperson/blob/copilot/salesperson-agent-platform/docs/PLATFORM.md">Read platform docs</a>
+            </div>
+            <ul class="hero-points">
+              <li>No LLM keys exposed in the browser</li>
+              <li>Per-website API keys and sales behavior</li>
+              <li>Built-in usage and deal tracking</li>
+            </ul>
+          </div>
+
+          <div class="code-card" aria-label="Example embed snippet">
+            <div class="code-card-header">
+              <span>Embed on your site</span>
+              <span>widget.js</span>
+            </div>
+            <pre><code>&lt;script
+  src="https://your-platform.example/widget.js"
+  data-api-key="sk_live_..."
+  data-api-base="https://your-platform.example"
+&gt;&lt;/script&gt;</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container">
+          <div class="section-header">
+            <h2>What we provide</h2>
+            <p>
+              A hosted gateway between your website and LLM providers — not a library you
+              import. Website owners get embed, API, and analytics in one platform.
+            </p>
+          </div>
+          <div class="cards">
+            <article class="card">
+              <h3>Embeddable widget</h3>
+              <p>
+                Drop a script tag on Shopify, WordPress, or any static site. Visitors get a
+                sales chat without you building frontend infrastructure.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Public chat API</h3>
+              <p>
+                <code>POST /v1/chat/completions</code> forwards messages through our gateway
+                with tenant auth, behavior injection, and automatic token metering.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Sales behavior control</h3>
+              <p>
+                Configure system prompts, tone, and goals per website so each brand sounds
+                on-message while sharing the same platform.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Usage &amp; deal tracking</h3>
+              <p>
+                See messages, tokens, outcomes, and deal stages per site. Usage is recorded
+                by the gateway — not self-reported by clients.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Multi-tenant by design</h3>
+              <p>
+                Each website gets its own API key, domain, LLM configuration, and isolated
+                metrics — ready for a SaaS pricing model.
+              </p>
+            </article>
+            <article class="card">
+              <h3>Provider flexibility</h3>
+              <p>
+                Route to OpenAI, Anthropic, or custom endpoints. Owners can bring their own
+                keys or use platform-hosted inference later.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="how-it-works">
+        <div class="container">
+          <div class="section-header">
+            <h2>How it works</h2>
+            <p>Website traffic never talks to the LLM directly. Everything goes through your platform API.</p>
+          </div>
+          <div class="steps">
+            <article class="step">
+              <div class="step-num">1</div>
+              <h3>Register</h3>
+              <p>Create a website tenant and receive an API key plus embed snippet.</p>
+            </article>
+            <article class="step">
+              <div class="step-num">2</div>
+              <h3>Configure</h3>
+              <p>Set sales prompts, tone, and goals that shape assistant responses.</p>
+            </article>
+            <article class="step">
+              <div class="step-num">3</div>
+              <h3>Embed</h3>
+              <p>Paste the script on your site. The widget calls our public API.</p>
+            </article>
+            <article class="step">
+              <div class="step-num">4</div>
+              <h3>Measure</h3>
+              <p>Track usage, outcomes, and deal progress from the summary API.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="api">
+        <div class="container split">
+          <div>
+            <div class="section-header">
+              <h2>API surface</h2>
+              <p>Two layers: a public product API for websites, and an admin API for setup.</p>
+            </div>
+            <h3>Public API</h3>
+            <ul class="api-list">
+              <li><code>POST /v1/chat/completions</code> — forward chat (Bearer API key)</li>
+              <li><code>GET /v1/usage</code> — usage summary for authenticated site</li>
+              <li><code>GET /widget.js</code> — embeddable script</li>
+            </ul>
+            <h3>Admin API</h3>
+            <ul class="api-list">
+              <li><code>POST /websites</code> — register site, returns API key once</li>
+              <li><code>PUT /websites/{id}/behavior</code> — sales prompt &amp; goals</li>
+              <li><code>GET /websites/{id}/summary</code> — dashboard metrics</li>
+            </ul>
+          </div>
+          <div class="code-card">
+            <div class="code-card-header">
+              <span>Example chat request</span>
+              <span>/v1/chat/completions</span>
+            </div>
+            <pre><code>curl -X POST https://your-platform.example/v1/chat/completions \
+  -H "Authorization: Bearer sk_live_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What plan fits 10 users?"}
+    ]
+  }'</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="get-started">
+        <div class="container">
+          <div class="section-header">
+            <h2>Who this is for</h2>
+            <p>Built for teams that want AI sales on their site without operating LLM infrastructure.</p>
+          </div>
+          <div class="split">
+            <ul class="checklist">
+              <li>E-commerce stores that want guided product recommendations</li>
+              <li>SaaS marketing sites that need qualification and demo booking</li>
+              <li>Agencies offering white-label AI sales widgets to clients</li>
+              <li>Developers who prefer an API gateway over embedding LLM keys in the browser</li>
+            </ul>
+            <ul class="checklist">
+              <li>Run locally: <code>python3 -m salesperson</code></li>
+              <li>Register a website via <code>POST /websites</code></li>
+              <li>Chat through the gateway with your API key</li>
+              <li>Full technical spec in the platform documentation</li>
+            </ul>
+          </div>
+
+          <div class="cta">
+            <div>
+              <h3 style="margin: 0 0 8px">Ready to explore the platform?</h3>
+              <p style="margin: 0; color: var(--muted)">
+                Clone the repo, run the server locally, and review the architecture guide.
+              </p>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap">
+              <a class="button button-primary" href="https://github.com/YanChao1999/salesperson">GitHub repository</a>
+              <a class="button button-secondary" href="https://github.com/YanChao1999/salesperson/blob/copilot/salesperson-agent-platform/docs/PLATFORM.md">Platform docs</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>Salesperson Agent Platform</span>
+        <span>
+          <a href="https://github.com/YanChao1999/salesperson">Source code</a>
+          ·
+          <a href="https://github.com/YanChao1999/salesperson/blob/copilot/salesperson-agent-platform/docs/PLATFORM.md">Developer docs</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>
