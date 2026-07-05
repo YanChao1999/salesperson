@@ -166,6 +166,12 @@ def create_app(platform: SalespersonPlatform | None = None):
         except (TypeError, ValueError) as exc:
             message = str(exc) if str(exc) else "Request body contains invalid values."
             return _json_response(start_response, "400 Bad Request", {"error": message})
+        except Exception:
+            return _json_response(
+                start_response,
+                "500 Internal Server Error",
+                {"error": "Internal server error."},
+            )
 
     return app
 

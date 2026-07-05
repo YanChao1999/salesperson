@@ -100,6 +100,35 @@ class PlatformGatewayTests(unittest.TestCase):
         self.assertEqual(int(str(captured["status"]).split()[0]), 200)
         self.assertIn(b"data-api-key", body)
 
+    def test_wsgi_returns_json_on_unhandled_error(self):
+        platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
+        app = create_app(platform)
+        _, website = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Error Store",
+                "domain": "error.example.com",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+
+        def _boom(**_kwargs):
+            raise RuntimeError("unexpected failure")
+
+        platform.gateway.forward_chat = _boom
+
+        status, error = request(
+            app,
+            "POST",
+            "/v1/chat/completions",
+            {"messages": [{"role": "user", "content": "Hello"}]},
+            api_key=website["api_key"],
+        )
+        self.assertEqual(status, 500)
+        self.assertEqual(error["error"], "Internal server error.")
+
 
 if __name__ == "__main__":
     unittest.main()
