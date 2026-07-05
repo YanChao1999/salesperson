@@ -11,6 +11,7 @@
         max-width: 960px;
         margin: 0 auto;
         padding: 32px 20px 64px;
+        color: var(--text);
       }
       .dashboard-header {
         display: flex;
@@ -22,17 +23,18 @@
       }
       .dashboard-header h1 {
         margin: 0 0 6px;
+        color: var(--text);
       }
       .dashboard-header p {
         margin: 0;
-        color: var(--muted, #64748b);
+        color: var(--muted);
       }
       .plan-badge {
         display: inline-block;
         padding: 6px 12px;
         border-radius: 999px;
-        background: #eef2ff;
-        color: #3730a3;
+        background: var(--accent-soft);
+        color: var(--accent);
         font-size: 14px;
         font-weight: 600;
       }
@@ -42,23 +44,28 @@
         gap: 10px;
         margin-bottom: 28px;
         padding: 16px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--border);
         border-radius: 12px;
-        background: #fff;
+        background: var(--bg-card);
       }
       .connect-form input {
         flex: 1 1 280px;
         min-width: 0;
         padding: 10px 12px;
-        border: 1px solid #cbd5e1;
+        border: 1px solid var(--border);
         border-radius: 8px;
+        background: var(--bg-elevated);
+        color: var(--text);
+      }
+      .connect-form input::placeholder {
+        color: var(--muted);
       }
       .connect-form button,
       .button-inline {
         padding: 10px 16px;
         border: none;
         border-radius: 8px;
-        background: #111827;
+        background: var(--accent);
         color: #fff;
         font-weight: 600;
         cursor: pointer;
@@ -70,8 +77,8 @@
         margin-bottom: 24px;
       }
       .metric-card {
-        background: #fff;
-        border: 1px solid #e2e8f0;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 16px;
       }
@@ -79,28 +86,37 @@
         display: block;
         font-size: 1.5rem;
         margin-bottom: 4px;
+        color: var(--text);
       }
       .metric-card span {
-        color: #64748b;
+        color: var(--muted);
         font-size: 13px;
       }
       .panel {
-        background: #fff;
-        border: 1px solid #e2e8f0;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: 12px;
         padding: 18px;
         margin-bottom: 18px;
+        color: var(--text);
       }
       .panel h2 {
         margin: 0 0 12px;
         font-size: 1.05rem;
+        color: var(--text);
+      }
+      .panel p {
+        color: var(--muted);
+      }
+      .panel strong {
+        color: var(--text);
       }
       .upgrade-banner {
         padding: 14px 16px;
         border-radius: 10px;
-        background: #fff7ed;
-        border: 1px solid #fdba74;
-        color: #9a3412;
+        background: rgba(251, 191, 36, 0.12);
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        color: #fcd34d;
         margin-bottom: 24px;
       }
       .feature-list {
@@ -115,30 +131,37 @@
         font-size: 12px;
         padding: 4px 8px;
         border-radius: 999px;
-        background: #f1f5f9;
-        color: #334155;
+        background: var(--bg-elevated);
+        color: var(--text);
+        border: 1px solid var(--border);
       }
       .error-banner {
         padding: 12px 14px;
         border-radius: 10px;
-        background: #fee2e2;
-        border: 1px solid #fca5a5;
-        color: #991b1b;
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        color: #fca5a5;
         margin-bottom: 18px;
       }
       .recent-table {
         width: 100%;
         border-collapse: collapse;
         font-size: 14px;
+        color: var(--text);
+      }
+      .recent-table th {
+        color: var(--muted);
+        font-weight: 600;
       }
       .recent-table th,
       .recent-table td {
         text-align: left;
         padding: 8px 6px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--border);
       }
       code.inline {
-        background: #f1f5f9;
+        background: var(--bg-elevated);
+        color: var(--accent);
         padding: 2px 6px;
         border-radius: 4px;
         font-size: 13px;
@@ -185,6 +208,7 @@
           aria-label="API base URL"
         />
         <button type="submit">Load dashboard</button>
+        <button type="button" id="refresh-btn" class="button-inline" hidden>Refresh</button>
       </form>
 
       <div id="error" class="error-banner" hidden></div>
@@ -197,6 +221,7 @@
       <section class="panel" id="site-panel" hidden>
         <h2>Site</h2>
         <p><strong id="site-name"></strong> · <code class="inline" id="site-domain"></code></p>
+        <p>Site ID: <code class="inline" id="site-id"></code></p>
         <p>Tone: <span id="site-tone"></span></p>
         <p>Widget script: <code class="inline" id="script-url"></code></p>
       </section>
@@ -233,6 +258,7 @@
         var apiBaseInput = document.getElementById("api-base");
         var errorBox = document.getElementById("error");
         var upgradeBox = document.getElementById("upgrade");
+        var refreshBtn = document.getElementById("refresh-btn");
 
         if (config.apiKey) {
           apiKeyInput.value = config.apiKey;
@@ -270,6 +296,7 @@
 
           document.getElementById("site-name").textContent = data.name;
           document.getElementById("site-domain").textContent = data.domain;
+          document.getElementById("site-id").textContent = data.website_id;
           document.getElementById("site-tone").textContent = data.behavior.tone;
           document.getElementById("script-url").textContent =
             data.embed.script_url || "—";
@@ -357,13 +384,28 @@
             showError("Enter your site API key.");
             return;
           }
-          loadDashboard(apiKey, apiBase).catch(function (error) {
+          loadDashboard(apiKey, apiBase)
+            .then(afterLoad)
+            .catch(function (error) {
+              showError(error.message);
+            });
+        });
+
+        refreshBtn.addEventListener("click", function () {
+          hideError();
+          loadDashboard(apiKeyInput.value.trim(), apiBaseInput.value.trim()).catch(function (error) {
             showError(error.message);
           });
         });
 
+        function afterLoad() {
+          refreshBtn.hidden = false;
+        }
+
         if (config.apiKey) {
-          loadDashboard(config.apiKey, apiBaseInput.value).catch(function (error) {
+          loadDashboard(config.apiKey, apiBaseInput.value)
+            .then(afterLoad)
+            .catch(function (error) {
             showError(error.message);
           });
         }

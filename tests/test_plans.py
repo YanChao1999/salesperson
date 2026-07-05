@@ -143,6 +143,95 @@ class PlanEnforcementTests(unittest.TestCase):
         with self.assertRaises(PlanError):
             require_feature("free", "usage_api")
 
+    def test_plan_upgrade_and_downgrade_cycle(self):
+        app = create_app(SalespersonPlatform(agent_base_url="http://127.0.0.1:8000"))
+        _, website, _ = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Cycle Shop",
+                "domain": "cycle.example.com",
+                "plan": "basic",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+        api_key = website["api_key"]
+        website_id = website["website_id"]
+
+        status, updated, _ = request(
+            app,
+            "PUT",
+            f"/websites/{website_id}/plan",
+            {"plan": "custom"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(updated["plan"], "custom")
+
+        status, updated, _ = request(
+            app,
+            "PUT",
+            f"/websites/{website_id}/plan",
+            {"plan": "advanced"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(updated["plan"], "advanced")
+
+        status, updated, _ = request(
+            app,
+            "PUT",
+            f"/websites/{website_id}/plan",
+            {"plan": "free"},
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(updated["plan"], "free")
+
+        status, error, _ = request(app, "GET", "/v1/usage", api_key=api_key)
+        self.assertEqual(status, 403)
+
+        status, dashboard, _ = request(app, "GET", "/v1/dashboard", api_key=api_key)
+        self.assertEqual(status, 200)
+        self.assertEqual(dashboard["plan"], "free")
+        self.assertFalse(dashboard["metrics"]["available"])
+
+        status, _, _ = request(
+            app,
+            "PUT",
+            f"/websites/{website_id}/plan",
+            {"plan": "basic"},
+        )
+        self.assertEqual(status, 200)
+
+        status, usage, _ = request(app, "GET", "/v1/usage", api_key=api_key)
+        self.assertEqual(status, 200)
+
+        status, dashboard, _ = request(app, "GET", "/v1/dashboard", api_key=api_key)
+        self.assertEqual(dashboard["plan"], "basic")
+        self.assertEqual(dashboard["metrics"]["usage_events"], 0)
+
+    def test_set_plan_rejects_invalid_plan(self):
+        app = create_app(SalespersonPlatform(agent_base_url="http://127.0.0.1:8000"))
+        _, website, _ = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Invalid Plan Shop",
+                "domain": "invalid-plan.example.com",
+                "plan": "basic",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+
+        status, error, _ = request(
+            app,
+            "PUT",
+            f"/websites/{website['website_id']}/plan",
+            {"plan": "enterprise"},
+        )
+        self.assertEqual(status, 400)
+        self.assertIn("Invalid plan", error["error"])
+
 
 class OwnerDashboardTests(unittest.TestCase):
     def test_dashboard_available_on_free_plan_without_metrics(self):
@@ -198,6 +287,38 @@ class OwnerDashboardTests(unittest.TestCase):
         self.assertEqual(dashboard["plan"], "basic")
         self.assertEqual(dashboard["metrics"]["usage_events"], 1)
         self.assertEqual(len(dashboard["recent_usage"]), 1)
+
+    def test_dashboard_includes_deals_on_basic_plan(self):
+        platform = SalespersonPlatform(agent_base_url="http://127.0.0.1:8000")
+        app = create_app(platform)
+        _, website, _ = request(
+            app,
+            "POST",
+            "/websites",
+            {
+                "name": "Dash Deals",
+                "domain": "dash-deals.example.com",
+                "plan": "basic",
+                "llm": {"provider": "openai", "model": "gpt-4.1"},
+            },
+        )
+        website_id = website["website_id"]
+        api_key = website["api_key"]
+
+        user = platform.create_user(website_id, external_user_id="buyer-1")
+        platform.trace_deal(
+            website_id,
+            user_id=user["user_id"],
+            stage="won",
+            value=149.99,
+            note="Test deal",
+        )
+
+        status, dashboard, _ = request(app, "GET", "/v1/dashboard", api_key=api_key)
+        self.assertEqual(status, 200)
+        self.assertEqual(dashboard["metrics"]["deals"], 1)
+        self.assertEqual(dashboard["metrics"]["deal_value"], 149.99)
+        self.assertEqual(len(dashboard["recent_deals"]), 1)
 
 
 if __name__ == "__main__":
