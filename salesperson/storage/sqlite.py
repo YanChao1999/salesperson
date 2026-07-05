@@ -36,6 +36,7 @@ class SqliteRepository:
                     website_id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     domain TEXT NOT NULL,
+                    plan TEXT NOT NULL DEFAULT 'free',
                     llm_json TEXT NOT NULL,
                     plugin_json TEXT NOT NULL,
                     behavior_json TEXT NOT NULL,
@@ -77,17 +78,26 @@ class SqliteRepository:
                 );
                 """
             )
+            columns = {
+                row["name"]
+                for row in conn.execute("PRAGMA table_info(websites)").fetchall()
+            }
+            if "plan" not in columns:
+                conn.execute(
+                    "ALTER TABLE websites ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'"
+                )
 
     def save_website(self, website: Website) -> None:
         with self._connect() as conn:
             conn.execute(
                 """
                 INSERT INTO websites (
-                    website_id, name, domain, llm_json, plugin_json, behavior_json, api_key_hash
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    website_id, name, domain, plan, llm_json, plugin_json, behavior_json, api_key_hash
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(website_id) DO UPDATE SET
                     name = excluded.name,
                     domain = excluded.domain,
+                    plan = excluded.plan,
                     llm_json = excluded.llm_json,
                     plugin_json = excluded.plugin_json,
                     behavior_json = excluded.behavior_json,
@@ -97,6 +107,7 @@ class SqliteRepository:
                     website.website_id,
                     website.name,
                     website.domain,
+                    website.plan,
                     json.dumps(asdict(website.llm)),
                     json.dumps(website.plugin),
                     json.dumps(asdict(website.behavior)),
@@ -121,6 +132,7 @@ class SqliteRepository:
             plugin=json.loads(row["plugin_json"]),
             behavior=SalesBehavior(**json.loads(row["behavior_json"])),
             api_key_hash=row["api_key_hash"],
+            plan=row["plan"] if "plan" in row.keys() else "free",
         )
 
     def get_website(self, website_id: str) -> Website:

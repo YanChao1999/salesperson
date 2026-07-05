@@ -22,6 +22,7 @@ class SqliteRepositoryTests(unittest.TestCase):
                 domain="persist.example.com",
                 llm_provider="openai",
                 llm_model="gpt-4.1",
+                plan="custom",
             )
             user = platform.create_user(website["website_id"])
             platform.set_behavior(

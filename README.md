@@ -34,12 +34,14 @@ python3 -m salesperson
 
 ### Public (website / widget) — requires `Authorization: Bearer sk_live_…`
 
-- `POST /v1/chat/completions` — forward chat to LLM (stub provider in dev)
-- `GET /v1/usage` — usage summary for authenticated website
+- `POST /v1/chat/completions` — forward chat to LLM (demo provider in dev)
+- `GET /v1/usage` — usage summary (Basic API plan and above)
+- `GET /v1/dashboard` — owner dashboard data (site API key)
 
 ### Admin (operator / dashboard)
 
-- `POST /websites` — register website (returns `api_key` once)
+- `POST /websites` — register website (`plan`: `free` | `basic` | `custom` | `advanced`)
+- `PUT /websites/{id}/plan` — change plan (admin)
 - `POST /websites/{id}/users`
 - `PUT /websites/{id}/behavior`
 - `POST /websites/{id}/usage`
@@ -50,6 +52,7 @@ python3 -m salesperson
 
 - `GET /widget.js` — embeddable chat widget
 - `GET /health`
+- **Owner UI:** [dashboard.html](docs/dashboard.html) (local: `make docs` → `:8080/dashboard.html`)
 
 ## Example
 
