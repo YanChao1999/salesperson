@@ -80,6 +80,7 @@ class WidgetUserTrackingTests(unittest.TestCase):
             {
                 "name": "Visitor Store",
                 "domain": "visitor.example.com",
+                "plan": "basic",
                 "llm": {"provider": "openai", "model": "gpt-4.1"},
             },
         )

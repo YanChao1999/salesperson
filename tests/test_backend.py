@@ -34,6 +34,7 @@ class SalespersonPlatformTests(unittest.TestCase):
             domain="demo.example.com",
             llm_provider="openai",
             llm_model="gpt-4.1",
+            plan="custom",
         )
         user = platform.create_user(website["website_id"], external_user_id="customer-7")
         platform.set_behavior(
@@ -80,6 +81,7 @@ class SalespersonPlatformTests(unittest.TestCase):
             {
                 "name": "Northwind",
                 "domain": "northwind.example.com",
+                "plan": "custom",
                 "llm": {"provider": "anthropic", "model": "claude-sonnet-5"},
             },
         )

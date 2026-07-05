@@ -8,13 +8,13 @@ from wsgiref.simple_server import make_server
 
 from .backend import SalespersonPlatform
 from .config import ADMIN_TOKEN, AGENT_BASE_URL, HOST, LLM_PROVIDER, PORT
-from .errors import AuthError, PlatformNotFoundError
+from .errors import AuthError, PlanError, PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import ChatCompletionRequest
 
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 
-_CORS_PUBLIC_PATHS = {"/widget.js", "/v1/chat/completions", "/v1/usage"}
+_CORS_PUBLIC_PATHS = {"/widget.js", "/v1/chat/completions", "/v1/usage", "/v1/dashboard"}
 
 
 def _normalize_path(path: str) -> str:
@@ -138,6 +138,7 @@ def create_app(platform: SalespersonPlatform | None = None):
                             "widget": "GET /widget.js",
                             "chat": "POST /v1/chat/completions",
                             "usage": "GET /v1/usage",
+                            "dashboard": "GET /v1/dashboard",
                             "register": "POST /websites",
                         },
                     },
@@ -185,6 +186,16 @@ def create_app(platform: SalespersonPlatform | None = None):
                     path=path,
                 )
 
+            if method == "GET" and path == "/v1/dashboard":
+                dashboard = gateway.owner_dashboard(api_key=_bearer_token(environ))
+                return _json_response(
+                    start_response,
+                    "200 OK",
+                    dashboard,
+                    environ=environ,
+                    path=path,
+                )
+
             if method == "POST" and path == "/websites":
                 denied = _require_admin(environ, start_response)
                 if denied:
@@ -195,6 +206,7 @@ def create_app(platform: SalespersonPlatform | None = None):
                     llm_provider=body["llm"]["provider"],
                     llm_model=body["llm"]["model"],
                     llm_api_base=body["llm"].get("api_base"),
+                    plan=body.get("plan", "free"),
                 )
                 return _json_response(start_response, "201 Created", website)
 
@@ -203,6 +215,10 @@ def create_app(platform: SalespersonPlatform | None = None):
                 denied = _require_admin(environ, start_response)
                 if denied:
                     return denied
+
+            if len(parts) == 3 and parts[0] == "websites" and parts[2] == "plan" and method == "PUT":
+                website = platform.set_plan(parts[1], plan=body["plan"])
+                return _json_response(start_response, "200 OK", website)
 
             if len(parts) == 3 and parts[0] == "websites" and parts[2] == "users" and method == "POST":
                 user = platform.create_user(
@@ -252,6 +268,14 @@ def create_app(platform: SalespersonPlatform | None = None):
             return _json_response(
                 start_response,
                 "401 Unauthorized",
+                {"error": str(exc)},
+                environ=environ,
+                path=path,
+            )
+        except PlanError as exc:
+            return _json_response(
+                start_response,
+                "403 Forbidden",
                 {"error": str(exc)},
                 environ=environ,
                 path=path,

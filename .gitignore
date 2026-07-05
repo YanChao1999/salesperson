@@ -8,3 +8,4 @@ venv/
 data/
 *.db
 docs/test-widget.config.js
+docs/dashboard.config.js

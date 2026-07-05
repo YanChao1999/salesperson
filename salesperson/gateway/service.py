@@ -11,6 +11,7 @@ from salesperson.models import (
     UsageRecord,
     WebsiteUser,
 )
+from salesperson.plans import PLAN_LABELS, allows_chat_channel, has_feature, plan_features, require_feature
 from salesperson.providers.base import LLMProvider
 from salesperson.storage.base import PlatformRepository
 
@@ -62,6 +63,8 @@ class ChatGateway:
     ) -> ChatCompletionResponse:
         website_id = self.authenticate(api_key)
         website = self._repository.get_website(website_id)
+        if not allows_chat_channel(website.plan, request.channel):
+            require_feature(website.plan, "public_chat")
         user_id = request.user_id or f"{website_id}-anonymous"
         if request.user_id:
             if _is_widget_visitor(request.user_id, request.channel):
@@ -99,12 +102,16 @@ class ChatGateway:
 
     def usage_summary(self, *, api_key: str | None) -> dict:
         website_id = self.authenticate(api_key)
+        website = self._repository.get_website(website_id)
+        require_feature(website.plan, "usage_api")
+        return self._usage_metrics(website_id, website.domain)
+
+    def _usage_metrics(self, website_id: str, domain: str) -> dict:
         usage = self._repository.list_usage(website_id)
         deals = self._repository.list_deals(website_id)
-        website = self._repository.get_website(website_id)
         return {
             "website_id": website_id,
-            "domain": website.domain,
+            "domain": domain,
             "tracked_users": self._repository.count_users(website_id),
             "usage_events": len(usage),
             "messages": sum(item.messages for item in usage),
@@ -112,6 +119,38 @@ class ChatGateway:
             "deals": len(deals),
             "deal_value": round(sum(item.value for item in deals), 2),
         }
+
+    def owner_dashboard(self, *, api_key: str | None) -> dict:
+        website_id = self.authenticate(api_key)
+        website = self._repository.get_website(website_id)
+        usage = self._repository.list_usage(website_id)
+        deals = self._repository.list_deals(website_id)
+        dashboard: dict = {
+            "website_id": website.website_id,
+            "name": website.name,
+            "domain": website.domain,
+            "plan": website.plan,
+            "plan_label": PLAN_LABELS[website.plan],
+            "features": sorted(plan_features(website.plan)),
+            "behavior": asdict(website.behavior),
+            "embed": {
+                "script_url": website.plugin.get("script_url"),
+                "note": "API key is shown once at registration. Use your saved key below.",
+            },
+            "upgrade_url": "https://yanchao1999.github.io/salesperson/#plans",
+        }
+        if has_feature(website.plan, "usage_api"):
+            dashboard["metrics"] = self._usage_metrics(website.website_id, website.domain)
+            dashboard["recent_usage"] = [asdict(item) for item in usage[-5:]]
+            dashboard["recent_deals"] = [asdict(item) for item in deals[-5:]]
+        else:
+            dashboard["metrics"] = {
+                "available": False,
+                "message": "Upgrade to Basic API to view usage metrics and deal totals.",
+            }
+            dashboard["recent_usage"] = []
+            dashboard["recent_deals"] = []
+        return dashboard
 
     @staticmethod
     def parse_messages(raw_messages: list[dict]) -> list[ChatMessage]:

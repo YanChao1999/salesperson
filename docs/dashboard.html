@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Owner dashboard — Salesperson</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/style.css" />
+    <style>
+      .dashboard-wrap {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 32px 20px 64px;
+      }
+      .dashboard-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 24px;
+      }
+      .dashboard-header h1 {
+        margin: 0 0 6px;
+      }
+      .dashboard-header p {
+        margin: 0;
+        color: var(--muted, #64748b);
+      }
+      .plan-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .connect-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 28px;
+        padding: 16px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #fff;
+      }
+      .connect-form input {
+        flex: 1 1 280px;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+      }
+      .connect-form button,
+      .button-inline {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background: #111827;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .metric-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .metric-card strong {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 4px;
+      }
+      .metric-card span {
+        color: #64748b;
+        font-size: 13px;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 18px;
+      }
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+      }
+      .upgrade-banner {
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: #fff7ed;
+        border: 1px solid #fdba74;
+        color: #9a3412;
+        margin-bottom: 24px;
+      }
+      .feature-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .feature-list li {
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #334155;
+      }
+      .error-banner {
+        padding: 12px 14px;
+        border-radius: 10px;
+        background: #fee2e2;
+        border: 1px solid #fca5a5;
+        color: #991b1b;
+        margin-bottom: 18px;
+      }
+      .recent-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .recent-table th,
+      .recent-table td {
+        text-align: left;
+        padding: 8px 6px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      code.inline {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <span>Salesperson</span>
+        </div>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html">Home</a>
+          <a href="index.html#plans">Plans</a>
+          <a href="test-widget.html">Widget test</a>
+          <a href="PLATFORM.md">Docs</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="dashboard-wrap">
+      <div class="dashboard-header">
+        <div>
+          <h1>Owner dashboard</h1>
+          <p>View your site plan, embed setup, and usage metrics.</p>
+        </div>
+        <span id="plan-badge" class="plan-badge" hidden></span>
+      </div>
+
+      <form id="connect-form" class="connect-form">
+        <input
+          id="api-key"
+          type="password"
+          placeholder="Site API key (sk_live_…)"
+          autocomplete="off"
+          required
+        />
+        <input
+          id="api-base"
+          type="url"
+          value="http://127.0.0.1:8000"
+          aria-label="API base URL"
+        />
+        <button type="submit">Load dashboard</button>
+      </form>
+
+      <div id="error" class="error-banner" hidden></div>
+      <div id="upgrade" class="upgrade-banner" hidden></div>
+
+      <section id="metrics-section" hidden>
+        <div id="metrics" class="metrics-grid"></div>
+      </section>
+
+      <section class="panel" id="site-panel" hidden>
+        <h2>Site</h2>
+        <p><strong id="site-name"></strong> · <code class="inline" id="site-domain"></code></p>
+        <p>Tone: <span id="site-tone"></span></p>
+        <p>Widget script: <code class="inline" id="script-url"></code></p>
+      </section>
+
+      <section class="panel" id="features-panel" hidden>
+        <h2>Included features</h2>
+        <ul id="features" class="feature-list"></ul>
+      </section>
+
+      <section class="panel" id="recent-panel" hidden>
+        <h2>Recent usage</h2>
+        <table class="recent-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Channel</th>
+              <th>Messages</th>
+              <th>Tokens</th>
+            </tr>
+          </thead>
+          <tbody id="recent-usage"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="dashboard.config.js"></script>
+    <script>
+      (function () {
+        "use strict";
+
+        var config = window.SALESPERSON_DASHBOARD || {};
+        var form = document.getElementById("connect-form");
+        var apiKeyInput = document.getElementById("api-key");
+        var apiBaseInput = document.getElementById("api-base");
+        var errorBox = document.getElementById("error");
+        var upgradeBox = document.getElementById("upgrade");
+
+        if (config.apiKey) {
+          apiKeyInput.value = config.apiKey;
+        }
+        if (config.apiBase) {
+          apiBaseInput.value = config.apiBase;
+        }
+
+        function showError(message) {
+          errorBox.hidden = false;
+          errorBox.textContent = message;
+        }
+
+        function hideError() {
+          errorBox.hidden = true;
+          errorBox.textContent = "";
+        }
+
+        function metricCard(label, value) {
+          return (
+            '<article class="metric-card"><strong>' +
+            value +
+            '</strong><span>' +
+            label +
+            "</span></article>"
+          );
+        }
+
+        function renderDashboard(data) {
+          hideError();
+          document.getElementById("site-panel").hidden = false;
+          document.getElementById("features-panel").hidden = false;
+          document.getElementById("plan-badge").hidden = false;
+          document.getElementById("plan-badge").textContent = data.plan_label;
+
+          document.getElementById("site-name").textContent = data.name;
+          document.getElementById("site-domain").textContent = data.domain;
+          document.getElementById("site-tone").textContent = data.behavior.tone;
+          document.getElementById("script-url").textContent =
+            data.embed.script_url || "—";
+
+          var features = document.getElementById("features");
+          features.innerHTML = "";
+          (data.features || []).forEach(function (feature) {
+            var item = document.createElement("li");
+            item.textContent = feature.replace(/_/g, " ");
+            features.appendChild(item);
+          });
+
+          var metricsSection = document.getElementById("metrics-section");
+          var metricsEl = document.getElementById("metrics");
+          var recentPanel = document.getElementById("recent-panel");
+          upgradeBox.hidden = true;
+
+          if (data.metrics && data.metrics.available === false) {
+            metricsSection.hidden = true;
+            recentPanel.hidden = true;
+            upgradeBox.hidden = false;
+            upgradeBox.innerHTML =
+              data.metrics.message +
+              ' <a href="' +
+              data.upgrade_url +
+              '">View plans</a>';
+            return;
+          }
+
+          metricsSection.hidden = false;
+          var m = data.metrics;
+          metricsEl.innerHTML =
+            metricCard("Usage events", m.usage_events) +
+            metricCard("Messages", m.messages) +
+            metricCard("Tokens", m.tokens) +
+            metricCard("Visitors", m.tracked_users) +
+            metricCard("Deals", m.deals) +
+            metricCard("Deal value", m.deal_value);
+
+          recentPanel.hidden = false;
+          var tbody = document.getElementById("recent-usage");
+          tbody.innerHTML = "";
+          if (!data.recent_usage || data.recent_usage.length === 0) {
+            var row = document.createElement("tr");
+            row.innerHTML = '<td colspan="4">No usage yet.</td>';
+            tbody.appendChild(row);
+            return;
+          }
+          data.recent_usage.forEach(function (item) {
+            var usageRow = document.createElement("tr");
+            usageRow.innerHTML =
+              "<td>" +
+              item.user_id +
+              "</td><td>" +
+              item.channel +
+              "</td><td>" +
+              item.messages +
+              "</td><td>" +
+              item.tokens +
+              "</td>";
+            tbody.appendChild(usageRow);
+          });
+        }
+
+        function loadDashboard(apiKey, apiBase) {
+          var base = apiBase.replace(/\/$/, "");
+          return fetch(base + "/v1/dashboard", {
+            headers: { Authorization: "Bearer " + apiKey },
+          }).then(function (response) {
+            return response.json().then(function (payload) {
+              if (!response.ok) {
+                throw new Error(payload.error || "Failed to load dashboard.");
+              }
+              renderDashboard(payload);
+            });
+          });
+        }
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          hideError();
+          var apiKey = apiKeyInput.value.trim();
+          var apiBase = apiBaseInput.value.trim();
+          if (!apiKey) {
+            showError("Enter your site API key.");
+            return;
+          }
+          loadDashboard(apiKey, apiBase).catch(function (error) {
+            showError(error.message);
+          });
+        });
+
+        if (config.apiKey) {
+          loadDashboard(config.apiKey, apiBaseInput.value).catch(function (error) {
+            showError(error.message);
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>

@@ -52,6 +52,17 @@ Open **http://127.0.0.1:8080/test-widget.html** — loads your embed from
 `docs/test-widget.config.js` (copy from `test-widget.config.example.js`) or
 pass `?key=sk_live_…` in the URL.
 
+### Owner dashboard
+
+```bash
+make docs
+# → http://127.0.0.1:8080/dashboard.html
+```
+
+Paste your site API key or copy `dashboard.config.example.js` to
+`dashboard.config.js`. Calls `GET /v1/dashboard` (metrics require Basic API plan
+or higher).
+
 ## Persistence
 
 By default data is **in-memory** (lost on restart).
@@ -101,6 +112,8 @@ When `SALESPERSON_ADMIN_TOKEN` is unset, admin routes stay open for local dev.
 | ✓ | Widget visitor tracking (`user_id`) |
 | ✓ | Admin auth on `/websites/*` (optional token) |
 | ✓ | Widget test page (`docs/test-widget.html`) |
+| ✓ | Plan enforcement (`free` / `basic` / `custom` / `advanced`) |
+| ✓ | Owner dashboard UI (`docs/dashboard.html` + `GET /v1/dashboard`) |
 | | OpenAI / Anthropic provider |
 | | Rate limits per plan |
 | | Owner dashboard UI |
@@ -108,8 +121,8 @@ When `SALESPERSON_ADMIN_TOKEN` is unset, admin routes stay open for local dev.
 ## Next priorities
 
 1. **Real LLM provider** — opt-in `SALESPERSON_LLM_PROVIDER=openai` + API key env
-2. **Plan enforcement** — gate API features by tenant plan level
-3. **Domain allowlist** — restrict public API by website domain
+2. **Domain allowlist** — restrict public API by website domain
+3. **Rate limits** — quotas per plan tier
 4. **Postgres** — replace SQLite for production multi-instance deploy
 
 See [PLATFORM.md](PLATFORM.md) for architecture and API details.

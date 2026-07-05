@@ -8,6 +8,7 @@ from .auth.keys import generate_api_key, hash_api_key
 from .errors import PlatformNotFoundError
 from .gateway.service import ChatGateway
 from .models import DealRecord, SalesBehavior, LLMConfig, UsageRecord, Website, WebsiteUser
+from .plans import normalize_plan, require_feature
 from .providers.factory import create_provider
 from .storage.base import PlatformRepository
 from .storage.factory import create_repository
@@ -39,6 +40,7 @@ class SalespersonPlatform:
         llm_provider: str,
         llm_model: str,
         llm_api_base: str | None = None,
+        plan: str = "free",
     ) -> dict[str, Any]:
         if not name.strip():
             raise ValueError("Website name is required.")
@@ -46,6 +48,9 @@ class SalespersonPlatform:
             raise ValueError("Website domain is required.")
         if not llm_provider.strip() or not llm_model.strip():
             raise ValueError("LLM provider and model are required.")
+        normalized_plan = normalize_plan(plan)
+        if llm_api_base:
+            require_feature(normalized_plan, "byok")
 
         website_id = self._repository.next_website_id(_slugify(name or domain))
         api_key = generate_api_key()
@@ -67,6 +72,7 @@ class SalespersonPlatform:
                 system_prompt="Guide shoppers to the right product and capture deal context.",
             ),
             api_key_hash=hash_api_key(api_key),
+            plan=normalized_plan,
         )
         self._repository.save_website(website)
         payload = self.get_website(website_id)
@@ -82,7 +88,14 @@ class SalespersonPlatform:
             "llm": asdict(website.llm),
             "plugin": website.plugin,
             "behavior": asdict(website.behavior),
+            "plan": website.plan,
         }
+
+    def set_plan(self, website_id: str, *, plan: str) -> dict[str, Any]:
+        website = self._repository.get_website(website_id)
+        website.plan = normalize_plan(plan)
+        self._repository.save_website(website)
+        return self.get_website(website_id)
 
     def create_user(
         self,
@@ -111,6 +124,8 @@ class SalespersonPlatform:
     ) -> dict[str, Any]:
         if not system_prompt.strip():
             raise ValueError("Sales behavior prompt is required.")
+        website = self._repository.get_website(website_id)
+        require_feature(website.plan, "custom_behavior")
         behavior = SalesBehavior(
             system_prompt=system_prompt,
             tone=tone,

@@ -14,5 +14,9 @@ class QuotaExceededError(PlatformError):
     pass
 
 
+class PlanError(PlatformError):
+    pass
+
+
 class ProviderError(PlatformError):
     pass

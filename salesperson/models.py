@@ -32,6 +32,7 @@ class Website:
     plugin: dict[str, Any]
     behavior: SalesBehavior
     api_key_hash: str = ""
+    plan: str = "free"
 
 
 @dataclass(slots=True)
