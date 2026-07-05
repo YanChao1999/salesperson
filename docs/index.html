@@ -18,8 +18,8 @@
           <span>Salesperson</span>
         </div>
         <nav class="nav-links" aria-label="Primary">
-          <a href="#features">Features</a>
-          <a href="#pricing">Plans</a>
+          <a href="#services">Services</a>
+          <a href="#plans">Plans</a>
           <a href="#how-it-works">How it works</a>
           <a href="#api">API</a>
           <a href="PLATFORM.md">Docs</a>
@@ -64,67 +64,132 @@
         </div>
       </section>
 
-      <section class="section" id="features">
+      <section class="section" id="services">
         <div class="container">
           <div class="section-header">
-            <h2>What we provide</h2>
+            <h2>Services</h2>
             <p>
-              A hosted gateway between your website and LLM providers — not a library you
-              import. Website owners get embed, API, and analytics in one platform.
+              Everything our platform can do. Higher plans include more services and more
+              support — see which level fits you in the sheet below.
             </p>
           </div>
-          <div class="cards">
-            <article class="card">
-              <h3>Embeddable widget</h3>
-              <p>
-                Drop a script tag on Shopify, WordPress, or any static site. Visitors get a
-                sales chat without you building frontend infrastructure.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Public chat API</h3>
-              <p>
-                <code>POST /v1/chat/completions</code> forwards messages through our gateway
-                with tenant auth, behavior injection, and automatic token metering.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Sales behavior control</h3>
-              <p>
-                Configure system prompts, tone, and goals per website so each brand sounds
-                on-message while sharing the same platform.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Usage &amp; deal tracking</h3>
-              <p>
-                See messages, tokens, outcomes, and deal stages per site. Usage is recorded
-                by the gateway — not self-reported by clients.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Multi-tenant by design</h3>
-              <p>
-                Each website gets its own API key, domain, LLM configuration, and isolated
-                metrics — ready for a SaaS pricing model.
-              </p>
-            </article>
-            <article class="card">
-              <h3>Provider flexibility</h3>
-              <p>
-                Route to OpenAI, Anthropic, or custom endpoints. Owners can bring their own
-                keys or use platform-hosted inference later.
-              </p>
-            </article>
+          <div class="service-sheet-wrap">
+            <table class="service-sheet">
+              <thead>
+                <tr>
+                  <th scope="col">Service</th>
+                  <th scope="col">Free</th>
+                  <th scope="col">Basic API</th>
+                  <th scope="col">Custom · Self-integrate</th>
+                  <th scope="col">Advanced · We integrate</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Embeddable widget (<code>widget.js</code>)</th>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Default sales assistant behavior</th>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Public chat API (<code>/v1/chat/completions</code>)</th>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Usage summary API (<code>/v1/usage</code>)</th>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Per-website API keys</th>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Custom prompts, tone &amp; sales goals</th>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Bring your own LLM provider (BYOK)</th>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Usage &amp; deal tracking</th>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Admin setup API (<code>/websites/*</code>)</th>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Self integration (you connect widget or API)</th>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Advanced API endpoints</th>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Custom platform services</th>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                </tr>
+                <tr>
+                  <th scope="row">Integration help from our team</th>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="no">—</td>
+                  <td class="yes">✓</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      <section class="section" id="pricing">
+      <section class="section" id="plans">
         <div class="container">
           <div class="section-header">
-            <h2>Plans</h2>
-            <p>We offer four levels. Contact us when you are ready to upgrade.</p>
+            <h2>Choose your plan</h2>
+            <p>
+              Four levels — each includes the services marked ✓ above. Contact us when
+              you are ready to upgrade.
+            </p>
           </div>
           <div class="pricing-grid">
             <article class="price-card">

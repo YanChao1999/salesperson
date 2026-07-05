@@ -342,6 +342,59 @@ a:hover {
   font-size: 0.92rem;
 }
 
+.service-sheet-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+.service-sheet {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.service-sheet th,
+.service-sheet td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.service-sheet thead th {
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.service-sheet tbody th[scope="row"] {
+  text-align: left;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 240px;
+}
+
+.service-sheet tbody tr:last-child th,
+.service-sheet tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.service-sheet .yes {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.service-sheet .no {
+  color: var(--muted);
+}
+
+.service-sheet code {
+  font-size: 0.85em;
+}
+
 .site-footer {
   border-top: 1px solid var(--border);
   padding: 28px 0 40px;
